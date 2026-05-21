@@ -1,11 +1,11 @@
-name: macOS Browser GUI
+name: macOS Web GUI (Fastest)
 on: workflow_dispatch
 
 jobs:
-  gui-access:
+  gui:
     runs-on: macos-latest
     steps:
-      - name: Set macOS Password
+      - name: Set Password
         run: |
           sudo sysadminctl -adminPassword "" -resetPasswordFor runneradmin -newPassword password123
 
@@ -13,17 +13,9 @@ jobs:
         run: |
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
           -activate -configure -access -on \
-          -clientopts -setvncpasswd -vncpasswd password123 \
-          -restart -agent -privs -all
+          -allowAccessFor -allUsers -privs -all
 
-      - name: Install noVNC (Browser Gateway)
-        run: |
-          brew install novnc
-          # Start the web gateway in the background
-          /usr/local/bin/websockify --web /usr/local/share/novnc/ 8080 localhost:5900 &
-
-      - name: Start Cloudflare Tunnel
-        run: |
-          brew install cloudflared
-          # This creates a public HTTP link for your browser
-          cloudflared tunnel --url http://localhost:8080
+      - name: Start tmate Session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
