@@ -1,15 +1,24 @@
-name: macOS Debug with tmate
+name: macOS GUI Access
 on: workflow_dispatch
 
 jobs:
-  debug:
+  gui-access:
     runs-on: macos-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Set macOS Password
+        run: |
+          # Sets 'runneradmin' password to 'password123'
+          sudo dscl . -passwd /Users/runneradmin password123
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          # Optional: This prevents the session from closing if you disconnect
-          detached: true
+      - name: Enable Screen Sharing
+        run: |
+          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+          -activate -configure -access -on \
+          -clientopts -setvncpasswd -vncpasswd password123 \
+          -restart -agent -privs -all
+
+      - name: Install and Start Cloudflare Tunnel
+        run: |
+          brew install cloudflared
+          # This starts a tunnel on port 5900 (VNC) and gives you a link
+          cloudflared tunnel --url tcp://localhost:5900
