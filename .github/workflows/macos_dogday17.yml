@@ -1,4 +1,4 @@
-name: macOS GUI Access
+name: macOS Browser GUI
 on: workflow_dispatch
 
 jobs:
@@ -7,19 +7,23 @@ jobs:
     steps:
       - name: Set macOS Password
         run: |
-          # Modern command to set the password for the current user
           sudo sysadminctl -adminPassword "" -resetPasswordFor runneradmin -newPassword password123
 
       - name: Enable Screen Sharing
         run: |
-          # Enable Apple Remote Desktop (VNC)
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
           -activate -configure -access -on \
           -clientopts -setvncpasswd -vncpasswd password123 \
           -restart -agent -privs -all
 
-      - name: Install and Start Cloudflare Tunnel
+      - name: Install noVNC (Browser Gateway)
+        run: |
+          brew install novnc
+          # Start the web gateway in the background
+          /usr/local/bin/websockify --web /usr/local/share/novnc/ 8080 localhost:5900 &
+
+      - name: Start Cloudflare Tunnel
         run: |
           brew install cloudflared
-          # This will generate a temporary URL in the logs
-          cloudflared tunnel --url tcp://localhost:5900
+          # This creates a public HTTP link for your browser
+          cloudflared tunnel --url http://localhost:8080
