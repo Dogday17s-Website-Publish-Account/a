@@ -1,11 +1,11 @@
-name: macOS Web GUI (Fastest)
+name: macOS Web GUI
 on: workflow_dispatch
 
 jobs:
   gui:
     runs-on: macos-latest
     steps:
-      - name: Set Password
+      - name: Set macOS Password
         run: |
           sudo sysadminctl -adminPassword "" -resetPasswordFor runneradmin -newPassword password123
 
@@ -15,7 +15,16 @@ jobs:
           -activate -configure -access -on \
           -allowAccessFor -allUsers -privs -all
 
-      - name: Start tmate Session
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: false
+      - name: Install noVNC Gateway
+        run: |
+          pip3 install websockify
+          git clone https://github.com
+
+      - name: Start Tunnel and Web Proxy
+        run: |
+          # Start the bridge between VNC and Web
+          ./noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 8080 &
+          
+          # Install and start Cloudflare
+          brew install cloudflared
+          cloudflared tunnel --url http://localhost:8080
