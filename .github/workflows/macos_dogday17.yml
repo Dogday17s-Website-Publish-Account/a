@@ -1,22 +1,15 @@
-name: macOS Remote Access
+name: macOS Debug with tmate
 on: workflow_dispatch
 
 jobs:
-  remote-access:
+  debug:
     runs-on: macos-latest
     steps:
-      - name: Setup SSH Keys
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > ~/.ssh/authorized_keys
-          chmod 600 ~/.ssh/authorized_keys
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Start SSH Server
-        run: |
-          sudo systemsetup -setremotelogin on
-
-      - name: Establish Tunnel
-        run: |
-          echo "Starting tunnel..."
-          echo "Run this on your PC: ssh -i \"C:\Users\Murat Saglam\.ssh\id_github_actions\" -J serveo.net runneradmin@macos_dogday17"
-          ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=60 -R macos_dogday17:22:localhost:22 serveo.net sleep 3600
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          # Optional: This prevents the session from closing if you disconnect
+          detached: true
