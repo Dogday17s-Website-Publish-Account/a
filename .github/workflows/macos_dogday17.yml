@@ -11,20 +11,19 @@ jobs:
 
       - name: Enable Screen Sharing
         run: |
+          # Fixed kickstart command
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
           -activate -configure -access -on \
           -allowAccessFor -allUsers -privs -all
 
       - name: Install noVNC Gateway
         run: |
-          pip3 install websockify
+          # Added --break-system-packages to bypass PEP 668
+          pip3 install websockify --break-system-packages
           git clone https://github.com
 
       - name: Start Tunnel and Web Proxy
         run: |
-          # Start the bridge between VNC and Web
           ./noVNC/utils/novnc_proxy --vnc localhost:5900 --listen 8080 &
-          
-          # Install and start Cloudflare
           brew install cloudflared
           cloudflared tunnel --url http://localhost:8080
